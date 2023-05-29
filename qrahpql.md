@@ -1,219 +1,42 @@
----
-theme: "white"
----
+Amazon Rekognition の emotion 機能に触れる機会があり、興味をもったので調べました。
 
-<style type="text/css"> p,h1,li { text-align: left; }
-</style>
+## Amazon Rekognition とは？
 
-## GraphQL とコード自動生成機能
+Amazon Web Services（AWS）が提供する画像およびビデオ解析サービス。
+コンピュータビジョン技術を使用して、画像やビデオ内のオブジェクト、シーン、顔、テキストなどを検出、分析が可能。
+機械学習とコンピュータビジョンの最新の技術を利用しており、リアルタイムでの画像およびビデオビデオ内のオブジェクト、シーン、顔、テキストなどを検出して、分析が可能。さまざまな業界やアプリケーションで活用されており、セキュリティ、マーケティング、メディア、エンターテイメントなどの分野で幅広く使用されている。
 
----
+## emotion 機能とは？
 
-## Applo client とは？
+顔の表情から主要な感情カテゴリを識別する。
+以下の感情カテゴリを検出が可能
 
-- GraphQL API をシンプルにクライアント側で操作するためのライブラリ
-- データの取得や操作のために便利な hooks を持つ
-- キャッシュ機能や状態管理機能をもつ
-- React、Vue だけではなく Svelte などの他のフレームワークで利用可能
+- 喜び（Happy）
+- 悲しみ（Sad）
+- 怒り（Angry）
+- 驚き（Surprised）
+- 無表情（Confused）
+- 嫌悪（Disgusted）
+- 恐れ（Fearful）
+- 穏やか（Calm）
+- 不明（Unknown）
 
----
+emotion 機能を利用することで、画像やビデオ内の顔の感情を自動的に分析し、顔の表情に基づいた情報を得られる。
+各顔に対して感情カテゴリとその信頼性スコアが感情の検出結果となる。
+画像内に複数の顔がある場合でも、それぞれの顔に対して個別に感情の検出が行われる。
 
-### どのように使用するのか？
+## 活用事例
 
-例）React で Applo Client の **useQuery** hooks を利用してデータを取得する
+セキュリティ、マーケティング、エンターテイメント、ユーザーエクスペリエンスの向上など、さまざまな用途で活用されている。
+顧客の反応を分析するために広告や映画の視聴者の感情を把握したり、動画チャットやビデオ会議において顔の感情をリアルタイムで認識することが可能。
 
-・スキーマを定義
+## 所感
 
-```
-#schema.graphql
-type Post {
-  id: String!
-  title: String!
-  email: String!
-}
+人の表情から感情をよめるなら
+ロボットが人のように感情を表現するようになったりするのかな～
+そんなに簡単な話ではないと思いますが、
 
-type Query{
-  posts: Post[]
-}
-```
+## 参考
 
-・実装
-
-```
-import { gql, useQuery } from '@apollo/client';
-
-// レスポンスの型定義
-interface PostQuery {
-  posts: {
-    id: string
-    title: string
-    email: string
-  }[]
-}
-
-// 実行するクエリを記載
-const postsQueryDocument = gql`
-  query posts {
-    posts {
-      id
-      title
-      email
-    }
-  }
-`
-
-const Posts = () => {
-  const { data } = useQuery<PostQuery>(postsQueryDocument);
-   data.posts.map((post) => (
-  　  //・・・
-   ))}
-}
-```
-
----
-
-### 型定義はめんどくさい
-
----
-
-### GraphQL Code Generator
-
-- スキーマとクエリ用のドキュメントを入力として与えることで、さまざまな言語とライブラリに対応した型情報を生成するツール（スキーマファーストの場合）
-- スキーマファーストまたはコードファーストのアプローチを選択できる
-- GraphQL スキーマの変更に伴うクライアントの再生成、GraphQL スキーマとクライアントコードの自動更新などの機能をもつ
-
----
-
-### どのように使用するのか？
-
-・スキーマを定義
-
-```
-#schema.graphql
-type Post {
-  id: String!
-  title: String!
-  email: String!
-}
-
-type Query{
-  posts: Post[]
-}
-```
-
-・クエリを定義
-
-```
-#posts.graphql
-query Posts {
-    posts {
-      id
-      title
-      email
-    }
-  }
-```
-
----
-
-・設定ファイルを作成
-
-```
-#codegen.yml
-schema: schema.graphql #スキーマファイルのパスを指定
-documents: graphql/**/*.graphql #クエリの定義が含まれるドキュメントファイルのパターンを指定
-generates:
-  graphql/generated/graphql.tsx: # 生成されるコードのファイルパス
-    plugins:  #使用されるプラグイン
-      - typescript
-      - typescript-operations
-      - typescript-react-apollo
-    config:
-      withHooks: true
-```
-
-codegen を実行すると...
-↓
-
----
-
-```
-// ./graphql/generated
-export type PostsQueryVariables = Exact<{ [key: string]: never; }>;
-
-// 型定義
-export type PostsQuery = { __typename?: 'Query', posts?: Array<{ __typename?: 'Post', id: string, title: string, email: string } | null> | null };
-
-
-// GraphQLクエリ
-export const PostsDocument = gql`
-  query Posts {
-    posts {
-      id
-      title
-      email
-    }
-  }
-`;
-
-/**
- * __usePostsQuery__
- *
- * To run a query within a React component, call `usePostsQuery` and pass it any options that fit your needs.
- * When your component renders, `usePostsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = usePostsQuery({
- *   variables: {
- *   },
- * });
- */
-
-// hooks
-export function usePostsQuery(baseOptions?: Apollo.QueryHookOptions<PostsQuery, PostsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options);
-      }
-export function usePostsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PostsQuery, PostsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options);
-        }
-export type PostsQueryHookResult = ReturnType<typeof usePostsQuery>;
-export type PostsLazyQueryHookResult = ReturnType<typeof usePostsLazyQuery>;
-export type PostsQueryResult = Apollo.QueryResult<PostsQuery, PostsQueryVariables>;
-```
-
-### 使用例
-
-```
-import { usePostsQuery } from './graphql/generated';
-
-const Posts = () => {
-  const { data } = usePostsQuery();
-
-  // ...
-}
-```
-
----
-
-### 比較
-
-```
-# Applo clientのhooksを使用
-const { data } = useQuery<PostQuery>(postsQueryDocument);
-
-# GraphQL Code Generatorにより生成されたhooksを使用
-const { data } = usePostsQuery();
-
-```
-
----
-
-## まとめ
-
-- 複数の API を実行して、必要な情報を取得するために、フロントで成形する必要がないので、フロントのコードが綺麗になる
-- 型定義や hooks の自動生成も可能なので、変更による手間やタイプミスの心配がない
+Emotion：https://docs.aws.amazon.com/rekognition/latest/APIReference/API_Emotion.html
+Amazon Rekognition：https://aws.amazon.com/jp/rekognition/
