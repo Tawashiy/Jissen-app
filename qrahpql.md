@@ -1,42 +1,115 @@
-Amazon Rekognition の emotion 機能に触れる機会があり、興味をもったので調べました。
+---
+theme: "white"
+---
 
-## Amazon Rekognition とは？
+<style type="text/css"> p,h1,li { text-align: left; }
+</style>
 
-Amazon Web Services（AWS）が提供する画像およびビデオ解析サービス。
-コンピュータビジョン技術を使用して、画像やビデオ内のオブジェクト、シーン、顔、テキストなどを検出、分析が可能。
-機械学習とコンピュータビジョンの最新の技術を利用しており、リアルタイムでの画像およびビデオビデオ内のオブジェクト、シーン、顔、テキストなどを検出して、分析が可能。さまざまな業界やアプリケーションで活用されており、セキュリティ、マーケティング、メディア、エンターテイメントなどの分野で幅広く使用されている。
+## レンダリング最適化方法
 
-## emotion 機能とは？
+---
 
-顔の表情から主要な感情カテゴリを識別する。
-以下の感情カテゴリを検出が可能
+### React Developer Tools
 
-- 喜び（Happy）
-- 悲しみ（Sad）
-- 怒り（Angry）
-- 驚き（Surprised）
-- 無表情（Confused）
-- 嫌悪（Disgusted）
-- 恐れ（Fearful）
-- 穏やか（Calm）
-- 不明（Unknown）
+Facebook から提供されている公式の React 用のデバッグツール\
+以下が可能になり、ページの状態を確認しながら開発ができる
 
-emotion 機能を利用することで、画像やビデオ内の顔の感情を自動的に分析し、顔の表情に基づいた情報を得られる。
-各顔に対して感情カテゴリとその信頼性スコアが感情の検出結果となる。
-画像内に複数の顔がある場合でも、それぞれの顔に対して個別に感情の検出が行われる。
+- コンポーネントの構造を視覚的に把握できる
+- コンポーネント間で渡されている Props の値が確認できる
+- コンポーネント内の State の値が確認できる
+- 実際に値を変えて動作の確認ができる
 
-## 活用事例
+---
 
-セキュリティ、マーケティング、エンターテイメント、ユーザーエクスペリエンスの向上など、さまざまな用途で活用されている。
-顧客の反応を分析するために広告や映画の視聴者の感情を把握したり、動画チャットやビデオ会議において顔の感情をリアルタイムで認識することが可能。
+＜参考＞
 
-## 所感
+- [Google Developer Tools のインストール](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi)
 
-人の表情から感情をよめるなら
-ロボットが人のように感情を表現するようになったりするのかな～
-そんなに簡単な話ではないと思いますが、
+---
 
-## 参考
+### why did you render
 
-Emotion：https://docs.aws.amazon.com/rekognition/latest/APIReference/API_Emotion.html
-Amazon Rekognition：https://aws.amazon.com/jp/rekognition/
+- 不要な再レンダリングをコンソールで警告してくれるライブラリ
+- オブジェクトが再生成された場合でも値が同じであれば警告を出す
+- React Native、typescript 環境、でも使用可能
+- React@18, React@17 , React@16 で動作保障
+
+---
+
+### 導入方法(typescript)
+
+- インストール
+
+```
+npm install @welldone-software/why-did-you-render --save-dev
+```
+
+- wdyr.ts 作成
+
+```typescript
+/// <reference types="@welldone-software/why-did-you-render" />
+
+import React from "react";
+
+if (process.env.NODE_ENV === "development") {
+  const whyDidYouRender = require("@welldone-software/why-did-you-render");
+  whyDidYouRender(React);
+}
+
+---
+
+- wdyr.tsをインポート
+```
+
+// index.tsx
+import './wdyr'; // <--- first import
+import React from "react";
+import { createRoot } from "react-dom/client";
+import App from "./components/App";
+
+const container = document.getElementById("root");
+const root = createRoot(container);
+
+root.render(<App />);
+
+```
+---
+
+### 動作確認
+
+```
+
+// App.tsx
+import React, { useState } from "react";
+
+const Child = () => {
+return <p>子要素です</p>;
+};
+
+const App = () => {
+const [count, setCount] = useState(0);
+const addcount = () => {
+setCount(count + 1);
+};
+return (
+<>
+
+<p>カウント：{count}</p>
+<button onClick={addcount}>カウントアップ</button>
+<Child />
+</>
+);
+};
+Child.whyDidYouRender = true; // <---監視対象とする
+
+export default App;
+
+```
+
+---
+
+### まとめ
+- create react appで作成したプロジェクトには使えない
+- ひとつずつ、whyDidYouRender = trueにしていく必要あり
+
+```
